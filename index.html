@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تێشتا دادی - Têşta Dadê</title>
+    
+    <!-- هاوردەکرنا فۆنتێ فەرمی یێ Zain یێ گونجای بۆ زمانێ کوردی و فۆنتێ Cairo یێ بێ کێشە -->
+    <link href="https://fonts.googleapis.com/css2?family=Zain:wght@700;800;900&family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- SDK یێن فایەربەیسێ -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* هاوردەکرنا فۆنتێ فەرمی و بناڤودەنگ یێ NRT Bold */
+        @font-face {
+            font-family: 'NRT-Bold';
+            src: url('https://cdn.jsdelivr.net/gh/zFont/main@main/Fonts/Language/Kurdish/NRT-Bold.ttf') format('truetype');
+            font-weight: normal; /* پێناسەکرنا کێشێ وەک نۆرماڵ بۆ ڕێگری ژ دووبارە ئەستوورکرنا دەستکرد */
+            font-style: normal;
+            font-display: swap;
+        }
+
+        :root {
+            /* ڕەنگێن نوو ل سەر بنەمایێ ڕەنگێن لۆگۆیا تە (Crimson & Cream) */
+            --primary-color: #9E121E; /* سۆرێ کرێزی یێ لۆگۆی */
+            --accent-color: #DCAE5B; /* زێڕینیێ هنگڤینی */
+            --bg-app: #FAF4F4; /* سپییا کەرەیی یا گەرم یا تێکەل ب سۆرێ نەرم */
+            --card-bg: #ffffff;
+            --text-dark: #000000; /* ڕەشێ تێر بۆ باشترین بەرچاڤی */
+            --text-light: #2C3532; 
+            --border-accent: rgba(158, 18, 30, 0.12);
+            --categories-bg: #ffffff;
+            --tab-bg: #F5EAEB;
+            --app-font: 'Zain', 'Cairo', sans-serif; /* بەکارهێنانا فۆنتێ Zain کو کێشەیا حەرفان د ئایفۆنێ دا چارەسەر دکەت */
+        }
+
+        .dark-theme {
+            /* ڕەنگێن مۆدا تاریک یا شاهانە ل سەر بنەمایێ سۆرێ لۆگۆی */
+            --primary-color: #C1121C; 
+            --accent-color: #E6BC73; 
+            --bg-app: #0C110F; 
+            --card-bg: #151D1A;
+            --text-dark: #FFFFFF; 
+            --text-light: #D1DFD8;
+            --border-accent: rgba(193, 18, 28, 0.18);
+            --categories-bg: #151D1A;
+            --tab-bg: #222E2A;
+        }
+
+        /* فۆنکشنا زێڕین یا ڕێگریا تەمام یا لێکڤەبوونا حەرفان د هەمی بەش و نووسینان دا */
+        body, button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6, div, label {
+            font-family: var(--app-font) !important;
+            letter-spacing: normal !important; /* پێکڤەنڤیسینا حەرفان د هەمی جۆرە مۆبایلان دا */
+            font-variant-ligatures: common-ligatures !important; 
+            text-rendering: optimizeLegibility !important; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-dark);
+            padding-top: 135px; 
+            padding-bottom: 40px;
+        }
+
+        /* تاسکبارێ سەرەکی دگەل گرادیانتێ لۆگۆیا تە */
+        .taskbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #7C0A11, #9E121E); /* گرادیانتێ سۆر یێ لۆگۆی */
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 4px 20px rgba(158, 18, 30, 0.25);
+            z-index: 1000;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .taskbar .brand-title {
+            font-weight: 900 !important;
+            font-size: 1.85rem !important; 
+            color: #ffffff !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+        }
+
+        .taskbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+        }
+
+        .settings-btn svg {
+            fill: #ffffff !important;
+            width: 28px;
+            height: 28px;
+            transition: transform 0.4s ease;
+        }
+
+        .settings-btn:hover svg {
+            transform: rotate(45deg);
+            fill: var(--accent-color) !important;
+        }
+
+        /* کاتگۆری بار */
+        .categories-bar {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            background-color: var(--categories-bg);
+            padding: 12px 10px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(158, 18, 30, 0.05);
+            z-index: 999;
+            scrollbar-width: none;
+            border-bottom: 2px solid var(--border-accent);
+        }
+
+        .categories-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-tab {
+            background-color: var(--tab-bg);
+            color: var(--primary-color) !important;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.95rem; 
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid transparent;
+            outline: none;
+        }
+
+        .category-tab.active {
+            background-color: var(--primary-color);
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(158, 18, 30, 0.25);
+        }
+
+        /* کانتینەرێ سەرەکی */
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 15px 10px;
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        /* کارتا مۆدێرن یا خوارنێ ب لێوارێن بازنەیی یێن نەرم وەک لۆگۆی */
+        .post-card {
+            background-color: var(--card-bg);
+            border-radius: 18px; 
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(158, 18, 30, 0.04);
+            border: 1px solid var(--border-accent);
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transform: translateY(0);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .post-card:active {
+            transform: scale(0.97) translateY(2px);
+        }
+
+        .post-image-container {
+            width: 100%;
+            aspect-ratio: 1 / 1 !important; /* فۆرماتێ ١:١ */
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #F5EAEB, #EAD5D7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dark-theme .post-image-container {
+            background: linear-gradient(135deg, #250E10, #160405);
+        }
+
+        .post-image-container img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important; 
+            position: relative;
+            z-index: 2;
+            display: block;
+        }
+
+        .post-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: var(--primary-color);
+            color: #ffffff !important;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            z-index: 3;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .post-details {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            flex-grow: 1;
+        }
+
+        .post-title-price {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-bottom: 6px;
+        }
+
+        .post-title {
+            font-size: 1.15rem; 
+            color: var(--text-dark) !important;
+            line-height: 1.35;
+        }
+
+        .post-price {
+            font-size: 1.05rem;
+            color: var(--primary-color) !important;
+        }
+
+        .dark-theme .post-price {
+            color: var(--accent-color) !important;
+        }
+
+        .post-desc {
+            font-size: 0.88rem; 
+            color: var(--text-light) !important;
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* فووتەرێ لۆکس د بنێ بەشی دا */
+        .app-footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 24px 10px;
+            border-top: 2px dashed var(--border-accent);
+            color: var(--text-light);
+            font-size: 1.05rem;
+        }
+
+        .app-footer p {
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .app-footer .footer-phone {
+            color: var(--primary-color);
+            font-size: 1.15rem;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .dark-theme .app-footer .footer-phone {
+            color: var(--accent-color);
+        }
+
+        /* مۆدال و دایەلۆگ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(26, 3, 4, 0.78); 
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .settings-modal {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-accent);
+            width: 92%;
+            max-width: 440px;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 15px 40px rgba(158, 18, 30, 0.25);
+            transform: scale(0.92);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.open .settings-modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            border-bottom: 2px solid var(--border-accent);
+            padding-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            color: var(--text-dark) !important;
+            font-size: 1.35rem;
+        }
+
+        .close-modal-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--text-light) !important;
+            cursor: pointer;
+        }
+
+        .setting-group {
+            margin-bottom: 18px;
+        }
+
+        .setting-group-title {
+            font-size: 1rem;
+            color: var(--text-light) !important;
+            margin-bottom: 10px;
+        }
+
+        .setting-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .setting-option-btn {
+            background-color: var(--tab-bg);
+            color: var(--text-dark) !important;
+            border: 1px solid var(--border-accent);
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .setting-option-btn.active {
+            background-color: var(--primary-color);
+            color: #ffffff !important;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 10px rgba(158, 18, 30, 0.2);
+        }
+
+        .developer-section {
+            text-align: center;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 2px dashed var(--border-accent);
+            font-size: 0.95rem;
+            color: var(--text-light) !important;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .developer-section strong {
+            color: var(--primary-color) !important;
+        }
+
+        .dark-theme .developer-section strong {
+            color: var(--accent-color) !important;
+        }
+
+        /* بەشێ ئەدمینی */
+        .admin-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .admin-form input, .admin-form select, .admin-form textarea {
+            width: 100%;
+            padding: 11px;
+            background-color: var(--tab-bg);
+            border: 1.5px solid var(--border-accent);
+            color: var(--text-dark) !important;
+            border-radius: 10px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .admin-form textarea {
+            resize: none;
+            height: 60px;
+        }
+
+        .apply-btn {
+            background-color: var(--primary-color);
+            color: #ffffff !important;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(158, 18, 30, 0.2);
+        }
+
+        /* فڵتەرکرنا کاتگۆریان د پشکا ئەدمینی دا */
+        .admin-cat-toggle-box {
+            background-color: var(--tab-bg);
+            border: 1.5px solid var(--border-accent);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .admin-cat-toggle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .cat-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: var(--text-dark) !important;
+            cursor: pointer;
+        }
+
+        .cat-toggle-label input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* پۆپ ئەپا زانیاریێن خوارنێ ب شێوازی ١:١ */
+        .detail-img-box {
+            width: 100%;
+            aspect-ratio: 1 / 1 !important; 
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1.5px solid var(--border-accent);
+            margin-bottom: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .detail-img-box img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        .detail-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .detail-title-large {
+            font-size: 1.55rem;
+            color: var(--text-dark) !important;
+            line-height: 1.4;
+        }
+
+        .detail-price-large {
+            font-size: 1.45rem;
+            color: var(--primary-color) !important;
+            white-space: nowrap;
+        }
+
+        .dark-theme .detail-price-large {
+            color: var(--accent-color) !important;
+        }
+
+        .detail-desc-full {
+            font-size: 1.05rem; 
+            color: var(--text-light) !important;
+            line-height: 1.7;
+            margin-bottom: 22px;
+            text-align: justify;
+        }
+
+        /* پێشبینیا چوارگۆشە */
+        .img-preview-box {
+            width: 100%;
+            aspect-ratio: 1/1 !important; 
+            border-radius: 10px;
+            overflow: hidden;
+            background: #eee;
+            margin-bottom: 6px;
+            border: 1.5px solid var(--border-accent);
+            display: none;
+            position: relative;
+        }
+
+        .img-preview-box img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        .admin-dishes-title {
+            font-size: 1.15rem;
+            color: var(--text-dark) !important;
+            margin: 18px 0 10px 0;
+            border-top: 2px dashed var(--border-accent);
+            padding-top: 14px;
+        }
+
+        .admin-dishes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        .admin-dish-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--tab-bg);
+            border: 1.5px solid var(--border-accent);
+            border-radius: 10px;
+        }
+
+        .admin-dish-info {
+            font-size: 0.95rem;
+            color: var(--text-dark) !important;
+            max-width: 50%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-dish-actions {
+            display: flex;
+            gap: 4px; 
+        }
+
+        .admin-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.25rem; 
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-action-btn:hover {
+            background-color: rgba(45, 66, 57, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- تاسکبار -->
+    <div class="taskbar">
+        <span class="brand-title" id="appBrandTitle">تێشتا دادی</span>
+        <div class="taskbar-actions">
+            <!-- دوگمەیا مۆدێرن یا سلایدەرێ سێتینگێ -->
+            <button class="settings-btn" id="openSettingsBtn" aria-label="Settings">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-8h8V3h-8v2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- بارا کاتگۆریان -->
+    <div class="categories-bar" id="categoriesBar">
+        <button class="category-tab active" data-cat="all" id="tabAll">هەمی</button>
+        <button class="category-tab" data-cat="germ" id="tabGerm">گەرم</button>
+        <button class="category-tab" data-cat="sar" id="tabSar">سار</button>
+        <button class="category-tab" data-cat="shirin" id="tabShirin">شیریناهی</button>
+        <button class="category-tab" data-cat="vexwarin" id="tabVex">ڤەخوارن</button>
+        <button class="category-tab" data-cat="wejbe" id="tabWejbe">وجبە</button>
+        <button class="category-tab" data-cat="ewaza" id="tabEwaza">عەوازە</button>
+    </div>
+
+    <!-- مینیۆ گرید -->
+    <div class="app-container">
+        <div class="posts-grid" id="menuGrid"></div>
+        
+        <!-- فووتەرێ لۆکس د بنێ بەشی دا -->
+        <footer class="app-footer">
+            <p id="footerBrandName">تێشتا دادی</p>
+            <p class="footer-phone">+964 751 549 3953</p>
+        </footer>
+    </div>
+
+    <!-- مۆدالێ سێتینگێ -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="settings-modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">سێتینگ</h3>
+                <button class="close-modal-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+            
+            <div class="setting-group">
+                <div class="setting-group-title" id="settingLangTitle">زمانێ ئەپڵیکەیشنی</div>
+                <div class="setting-options">
+                    <button class="setting-option-btn active" data-lang="badini">بادینی</button>
+                    <button class="setting-option-btn" data-lang="sorani">سۆرانی</button>
+                    <button class="setting-option-btn" data-lang="arabic">عربي</button>
+                    <button class="setting-option-btn" data-lang="english">English</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-group-title" id="settingThemeTitle">شێوازێ ڕەنگی (مۆد)</div>
+                <div class="setting-options">
+                    <button class="setting-option-btn active" data-theme="light" id="themeLightBtn">مۆدا ئاسایی</button>
+                    <button class="setting-option-btn" data-theme="dark" id="themeDarkBtn">مۆدا تاریک</button>
+                </div>
+            </div>
+
+            <div class="developer-section" id="devClickArea">
+                پەرەپێدەر: <strong style="text-decoration: underline;">omed abdulwahid</strong><br>
+                تەلەفۆن: <strong>07507100238</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- مۆدالێ ئەدمینی (ڤەشارتی) -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="settings-modal">
+            <div class="modal-header">
+                <h3 id="adminModalTitle">زێدەکرنا خوارنێ</h3>
+                <button class="close-modal-btn" id="closeAdminBtn">&times;</button>
+            </div>
+
+            <!-- ڕێکخستنا داینامیکی یا ناڤێ مینیۆیێ -->
+            <div class="admin-cat-toggle-box" style="margin-bottom: 15px;">
+                <div class="setting-group-title" style="margin-bottom: 8px;">ڕێکخستنا ناڤێ مینیۆیێ (سەر تاسکباری)</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="customBrandName" placeholder="ناڤەکێ نوو لێرە بنڤیسە...">
+                    <button class="apply-btn" id="saveBrandNameBtn" style="width: auto; padding: 10px 16px; font-size: 0.85rem;">پاشکەوت</button>
+                </div>
+            </div>
+            
+            <!-- کۆنترۆڵا چالاککرنا کاتگۆریان -->
+            <div class="admin-cat-toggle-box">
+                <div class="setting-group-title" style="margin-bottom: 2px;" id="adminCatToggleTitle">ڕێکخستنا پشکان (دیارکرن/شاردنەوە)</div>
+                <div class="admin-cat-toggle-grid" id="catToggleGrid"></div>
+            </div>
+
+            <form class="admin-form" id="addDishForm" onsubmit="event.preventDefault();">
+                <div class="img-preview-box" id="imgPreviewBox">
+                    <img id="imgPreview" src="" alt="Preview">
+                </div>
+
+                <input type="text" id="newDishName" placeholder="ناڤێ خوارنێ بنڤیسە" required>
+                <input type="text" id="newDishPrice" placeholder="سعر ل دەڤ خۆ بدانە (نموونە: ٥,٠٠٠ د.ع)" required>
+                <textarea id="newDishDesc" placeholder="وەسفەکا کورت بنڤیسە" required></textarea>
+                
+                <select id="newDishCat" required>
+                    <option value="germ" id="optGerm">گەرم</option>
+                    <option value="sar" id="optSar">سار</option>
+                    <option value="shirin" id="optShirin">شیریناهی</option>
+                    <option value="vexwarin" id="optVex">ڤەخوارن</option>
+                    <option value="wejbe" id="optWejbe">وجبە</option>
+                    <option value="ewaza" id="optEwaza">عەوازە</option>
+                </select>
+
+                <input type="file" id="newDishImgFile" accept="image/*" style="display: none;">
+                <button class="apply-btn" type="button" id="uploadImgBtn" style="background-color: var(--tab-bg); color: var(--text-dark) !important; border: 1.5px solid var(--border-accent); margin-bottom: 10px;">هەڵبژارتنا وێنەی ژ مۆبایلێ 📸</button>
+
+                <div style="display: flex; gap: 8px;">
+                    <button class="apply-btn" id="saveDishBtn">زێدەکرن</button>
+                    <button class="apply-btn" id="cancelEditBtn" style="background-color: var(--text-light); display: none;">پاشگەزبوون</button>
+                </div>
+            </form>
+
+            <div class="admin-dishes-title" id="adminListTitle">لیستا خوارنان</div>
+            <div class="admin-dishes-list" id="adminDishesList"></div>
+        </div>
+    </div>
+
+    <!-- پۆپ ئەپا زانیاریێن خوارنێ (١:١ چوارگۆشە) -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="settings-modal">
+            <div class="modal-header">
+                <span class="status-badge" id="detailBadge">کاتگۆری</span>
+                <button class="close-modal-btn" id="closeDetailBtn">&times;</button>
+            </div>
+            
+            <div class="detail-img-box" id="detailImgBox">
+                <img id="detailImg" src="" alt="Dish Image" onerror="this.parentNode.style.display='none';">
+            </div>
+
+            <div class="detail-header-info">
+                <h2 class="detail-title-large" id="detailTitle">ناڤێ خوارنێ</h2>
+                <span class="detail-price-large" id="detailPrice">٠ د.ع</span>
+            </div>
+
+            <p class="detail-desc-full" id="detailDesc">وەسفا تەمام ل ڤێرێ دیار دبیت.</p>
+            
+            <button class="apply-btn" id="closeDetailBtnBottom">داخستن</button>
+        </div>
+    </div>
+
+    <script>
+        // --- ⚙️ ڕێکخستنا فایەربەیسا تە یا نوو (dade-data) ب سەرکەفتی هاتە جێگیرکرن ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfFAiTQjGGb5bnnN_GYxamix34Dpybsd0",
+            authDomain: "dade-data.firebaseapp.com",
+            databaseURL: "https://dade-data-default-rtdb.firebaseio.com", // لینکێ ستاندارد یێ داتابەیسا تە
+            projectId: "dade-data",
+            storageBucket: "dade-data.firebasestorage.app",
+            messagingSenderId: "1044178637456",
+            appId: "1:1044178637456:web:5ba2bc75511dcabab5be15",
+            measurementId: "G-KQ2VVQL4N8"
+        };
+
+        // لۆجیکێ چالاککرنا فایەربەیسێ
+        let db = null;
+        let isFirebaseActive = false;
+
+        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                isFirebaseActive = true;
+                console.log("Firebase Connected Successfully!");
+            } catch (error) {
+                console.error("Firebase Initialization Failed:", error);
+            }
+        }
+
+        // پاسوۆردێ ئەدمینی
+        const ADMIN_PASSWORD = "dade@2026";
+
+        const translations = {
+            badini: {
+                brand: "تێشتا دادی", status: "ڤەکرییە", modalTitle: "سێتینگ",
+                langTitle: "زمانێ ئەپڵیکەیشنی", themeTitle: "شێوازێ ڕەنگی (مۆد)",
+                lightTheme: "مۆدا ئاسایی", darkTheme: "مۆدا تاریک", apply: "زێدەکرن",
+                adminTitle: "زێدەکرنا خوارنێ", optGerm: "گەرم", editBtn: "پاشکەوتکرن",
+                optSar: "سار", optShirin: "شیریناهی", optVex: "ڤەخوارن", optWejbe: "وجبە", optEwaza: "عەوازە", cancelBtn: "پاشگەزبوون",
+                catAll: "هەمی", catGerm: "گەرم", catSar: "سار", catShirin: "شیریناهی", catVex: "ڤەخوارن", catWejbe: "وجبە", catEwaza: "عەوازە",
+                adminListTitle: "لیستا خوارنان", closeBtn: "داخستن", adminCatToggleTitle: "ڕێکخستنا پشکان (دیارکرن/شاردنەوە)"
+            },
+            sorani: {
+                brand: "تێشتەی دادی", status: "کراوەیە", modalTitle: "ڕێکخستنەکان",
+                langTitle: "زمانی ئەپڵیکەیشن", themeTitle: "شێوازی ڕەنگ (مۆد)",
+                lightTheme: "مۆدی ئاسایی", darkTheme: "مۆدی تاریک", apply: "زیادکردن",
+                adminTitle: "زیادکردنی خواردن", optGerm: "گەرم", editBtn: "پاشکەوتکردن",
+                optSar: "سارد", optShirin: "شیرینی", optVex: "خواردنەوە", optWejbe: "وجبە", optEwaza: "عەوازە", cancelBtn: "پاشگەزبوونەوە",
+                catAll: "هەموو", catGerm: "گەرم", catSar: "سارد", catShirin: "شیرینی", catVex: "خواردنەوە", catWejbe: "وجبە", catEwaza: "عەوازە",
+                adminListTitle: "لیستی خواردنەکان", closeBtn: "داخستن", adminCatToggleTitle: "ڕێکخستنی بەشەکان (بینین/شاردنەوە)"
+            },
+            arabic: {
+                brand: "فطور دادي", status: "مفتوح", modalTitle: "الإعدادات",
+                langTitle: "لغة التطبيق", themeTitle: "مظهر الألوان (الوضع)",
+                lightTheme: "الوضع العادي", darkTheme: "الوضع الداكن", apply: "إضافة",
+                adminTitle: "إضافة طبق جديد", optGerm: "ساخن", editBtn: "حفظ",
+                optSar: "بارد", optShirin: "حلويات", optVex: "مشروبات", optWejbe: "وجبات", optEwaza: "مقبلات / عواوز", cancelBtn: "إلغاء",
+                catAll: "الكل", catGerm: "ساخن", catSar: "بارد", catShirin: "حلويات", catVex: "مشروبات", catWejbe: "وجبات", catEwaza: "مقبلات",
+                adminListTitle: "قائمة الأطباق", closeBtn: "إغلاق", adminCatToggleTitle: "إعداد الأقسام (إظهار/إخفاء)"
+            },
+            english: {
+                brand: "Dadê's Breakfast", status: "Open", modalTitle: "Settings",
+                langTitle: "App Language", themeTitle: "Color Mode (Theme)",
+                lightTheme: "Light Mode", darkTheme: "Dark Mode", apply: "Add",
+                adminTitle: "Add New Dish", optGerm: "Hot", editBtn: "Save",
+                optSar: "Cold", optShirin: "Desserts", optVex: "Drinks", optWejbe: "Meals", optEwaza: "Extras", cancelBtn: "Cancel",
+                catAll: "All", catGerm: "Hot", catSar: "Cold", catShirin: "Desserts", catVex: "Drinks", catWejbe: "Meals", catEwaza: "Extras",
+                adminListTitle: "Dishes List", closeBtn: "Close", adminCatToggleTitle: "Manage Categories (Show/Hide)"
+            }
+        };
+
+        const defaultDishes = [
+            { id: 1, name: "هێک ب سجووقێ", price: "٦,٢٥٠ د.ع", desc: "دوو هێکێن گوندێ دگەل سجووقا حەلال یا خۆمالی.", cat: "germ", img: "" },
+            { id: 2, name: "سینییا دادی یا مەزن", price: "١٥,٠٠٠ د.ع", desc: "هەمەجۆریا پەنێر، هنگڤین، قەیماخ و زەیتوونان.", cat: "sar", img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&h=400&fit=crop" },
+            { id: 3, name: "مەنەمەنا دادی", price: "٥,٠٠٠ د.ع", desc: "تەماتە، بیبەر و هێکێن تێکەل ب پەنیری ڤە.", cat: "germ", img: "" },
+            { id: 4, name: "قەیماخ و هنگڤین", price: "٦,٠٠٠ د.ع", desc: "قەیماخێ سرۆشتی دگەل هنگڤینێ چیا یێ پاقژ.", cat: "shirin", img: "https://images.unsplash.com/photo-1584736286279-4172579b29cc?w=400&h=400&fit=crop" },
+            { id: 5, name: "کولێرا تنوورێ", price: "١,٥٠٠ د.ع", desc: "کولێرا تەڕ و گەرم ب کەرە و کونجی ڤە.", cat: "germ", img: "" },
+            { id: 6, name: "چایا ب هێلێ", price: "١,٠٠٠ د.ع", desc: "چایا ڕەش یا دەمکری ل سەر پشکۆیێ گەرم.", cat: "vexwarin", img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&h=400&fit=crop" },
+            { id: 7, name: "وجبا دادی یا تایبەت", price: "١٢,٥٠٠ د.ع", desc: "وجبەکا تەمام پێکهاتی ژ هێک، سجووق، پەنێر، هنگڤین و چایا دەمکری.", cat: "wejbe", img: "" },
+            { id: 8, name: "عەوازە هنگڤین و کەرێ", price: "٣,٥٠٠ د.ع", desc: "کەرەیا کێوی دگەل هنگڤینێ چیایی یێ دەڤەرێ بۆ زێدەکرنێ.", cat: "ewaza", img: "" },
+            { id: 9, name: "هێک و قەلیا گۆشتی", price: "٧,٥٠٠ د.ع", desc: "قەلیا گۆشتێ بەرخی یێ کوردی دگەل هێکان.", cat: "germ", img: "https://images.unsplash.com/photo-1608897013039-887f21d8c804?w=400&h=400&fit=crop" },
+            { id: 10, name: "پەنێر ب گواێز", price: "٤,٥٠٠ د.ع", desc: "پەنێرێ سپی یێ چێکری دگەل مغزێ گویزێن تەڕ.", cat: "sar", img: "https://images.unsplash.com/photo-1552763443-1589487d27e5?w=400&h=400&fit=crop" }
+        ];
+
+        let dishes = JSON.parse(localStorage.getItem('t_dade_dishes')) || defaultDishes;
+        let currentLang = localStorage.getItem('t_dade_lang') || 'badini';
+        
+        // جێگیرکردنا مۆدا تاریک وەک دیفۆڵت د دەستپێکێ دا
+        let currentTheme = localStorage.getItem('t_dade_theme') || 'dark';
+        
+        let currentFilter = 'all';
+        let editingDishId = null;
+        let currentUploadedImgData = "";
+
+        // کۆنترۆڵا هەر شەش پشکان
+        let defaultCategoriesState = { germ: true, sar: true, shirin: true, vexwarin: true, wejbe: true, ewaza: true };
+        let categoriesState = JSON.parse(localStorage.getItem('t_dade_categories')) || defaultCategoriesState;
+
+        // نیشاندانا مینیۆیێ د پۆستان دا (سەر ئەساسێ ڕیزبەندییا فیزیکی یا ئۆپلۆدێ د ئەرێیدا)
+        function renderDishes() {
+            const menuGrid = document.getElementById('menuGrid');
+            menuGrid.innerHTML = '';
+
+            const filtered = dishes.filter(d => {
+                if (!categoriesState[d.cat]) return false;
+                return currentFilter === 'all' || d.cat === currentFilter;
+            });
+
+            filtered.forEach(dish => {
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                card.setAttribute('onclick', `openDetailModal(${dish.id})`);
+                card.innerHTML = `
+                    <div class="post-image-container">
+                        <span class="post-badge">${translations[currentLang][`opt${dish.cat.charAt(0).toUpperCase() + dish.cat.slice(1)}`] || dish.cat}</span>
+                        ${dish.img ? `<img src="${dish.img}" alt="${dish.name}" onerror="this.style.display='none';">` : ''}
+                    </div>
+                    <div class="post-details">
+                        <div class="post-title-price">
+                            <span class="post-title">${dish.name}</span>
+                            <span class="post-price">${dish.price}</span>
+                        </div>
+                        <p class="post-desc">${dish.desc}</p>
+                    </div>
+                `;
+                menuGrid.appendChild(card);
+            });
+        }
+
+        // ڤەکرنا مۆدالێ زانیاریێن تەمام (١:١ چوارگۆشە)
+        const detailModal = document.getElementById('detailModal');
+        window.openDetailModal = function(id) {
+            const dish = dishes.find(d => d.id === id);
+            if (!dish) return;
+
+            const detailImgBox = document.getElementById('detailImgBox');
+            const detailImg = document.getElementById('detailImg');
+
+            if (dish.img) {
+                detailImg.src = dish.img;
+                detailImgBox.style.display = 'block';
+            } else {
+                detailImgBox.style.display = 'none';
+            }
+
+            document.getElementById('detailBadge').textContent = translations[currentLang][`opt${dish.cat.charAt(0).toUpperCase() + dish.cat.slice(1)}`] || dish.cat;
+            document.getElementById('detailTitle').textContent = dish.name;
+            document.getElementById('detailPrice').textContent = dish.price;
+            document.getElementById('detailDesc').textContent = dish.desc;
+
+            detailModal.classList.add('open');
+        };
+
+        const closeDetail = () => detailModal.classList.remove('open');
+        document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
+        document.getElementById('closeDetailBtnBottom').addEventListener('click', closeDetail);
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) closeDetail();
+        });
+
+        // سیستەمێ نوو و سادە یێ ڕێزبەندیکرنێ ب تەمامترین شێواز
+        window.moveToTop = function(id) {
+            const index = dishes.findIndex(d => d.id === id);
+            if (index > 0) {
+                const [item] = dishes.splice(index, 1);
+                dishes.unshift(item); 
+                saveAndRefresh();
+            }
+        };
+
+        window.moveUp = function(id) {
+            const index = dishes.findIndex(d => d.id === id);
+            if (index > 0) {
+                const temp = dishes[index];
+                dishes[index] = dishes[index - 1];
+                dishes[index - 1] = temp;
+                saveAndRefresh();
+            }
+        };
+
+        // لیستا دەستکاریکردنێ د پشکا ئەدمینی دا دگەل کۆنترۆڵێن داینامیکی یێن ڕێزبەندیێ
+        function renderAdminList() {
+            const adminDishesList = document.getElementById('adminDishesList');
+            adminDishesList.innerHTML = '';
+
+            dishes.forEach((dish, index) => {
+                const row = document.createElement('div');
+                row.className = 'admin-dish-row';
+                row.innerHTML = `
+                    <div class="admin-dish-info">
+                        <strong>${index + 1}. ${dish.name}</strong> (${dish.price})
+                    </div>
+                    <div class="admin-dish-actions">
+                        <button class="admin-action-btn" onclick="moveToTop(${dish.id})" title="Move to Top">🔝</button>
+                        <button class="admin-action-btn" onclick="moveUp(${dish.id})" title="Move Up">⬆️</button>
+                        <button class="admin-action-btn" onclick="editDish(${dish.id})" title="Edit">✏️</button>
+                        <button class="admin-action-btn" onclick="deleteDish(${dish.id})" title="Delete">🗑️</button>
+                    </div>
+                `;
+                adminDishesList.appendChild(row);
+            });
+        }
+
+        // نووکرن و نیشاندانا تابلۆیێن کاتگۆریان
+        function updateCategoryTabsVisibility() {
+            const tabGerm = document.getElementById('tabGerm');
+            const tabSar = document.getElementById('tabSar');
+            const tabShirin = document.getElementById('tabShirin');
+            const tabVex = document.getElementById('tabVex');
+            const tabWejbe = document.getElementById('tabWejbe');
+            const tabEwaza = document.getElementById('tabEwaza');
+
+            tabGerm.style.display = categoriesState.germ ? 'inline-block' : 'none';
+            tabSar.style.display = categoriesState.sar ? 'inline-block' : 'none';
+            tabShirin.style.display = categoriesState.shirin ? 'inline-block' : 'none';
+            tabVex.style.display = categoriesState.vexwarin ? 'inline-block' : 'none';
+            tabWejbe.style.display = categoriesState.wejbe ? 'inline-block' : 'none';
+            tabEwaza.style.display = categoriesState.ewaza ? 'inline-block' : 'none';
+
+            if (currentFilter !== 'all' && !categoriesState[currentFilter]) {
+                currentFilter = 'all';
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                document.getElementById('tabAll').classList.add('active');
+            }
+        }
+
+        // فلتەرکرنا کاتگۆریان
+        const categoryTabs = document.querySelectorAll('.category-tab');
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.cat;
+                renderDishes();
+            });
+        });
+
+        // گۆڕینا دەستبەجێیا تێم و زمانی
+        const optionButtons = document.querySelectorAll('.setting-option-btn');
+        optionButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.querySelectorAll('.setting-option-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                if (this.dataset.lang) {
+                    currentLang = this.dataset.lang;
+                    localStorage.setItem('t_dade_lang', currentLang);
+                    applyLanguage();
+                }
+                if (this.dataset.theme) {
+                    currentTheme = this.dataset.theme;
+                    localStorage.setItem('t_dade_theme', currentTheme);
+                    applyTheme();
+                }
+            });
+        });
+
+        function applyTheme() {
+            if (currentTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.querySelector('[data-theme="dark"]').classList.add('active');
+                document.querySelector('[data-theme="light"]').classList.remove('active');
+            } else {
+                document.body.classList.remove('dark-theme');
+                document.querySelector('[data-theme="light"]').classList.add('active');
+                document.querySelector('[data-theme="dark"]').classList.remove('active');
+            }
+        }
+
+        function applyLanguage() {
+            if (currentLang === 'english') {
+                document.documentElement.setAttribute('dir', 'ltr');
+                document.documentElement.setAttribute('lang', 'en');
+            } else {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.documentElement.setAttribute('lang', 'ku');
+            }
+
+            const langData = translations[currentLang];
+            
+            const customBrandName = localStorage.getItem('t_dade_brand_name');
+            const displayTitle = customBrandName ? customBrandName : langData.brand;
+            
+            document.getElementById('appBrandTitle').textContent = displayTitle;
+            document.getElementById('footerBrandName').textContent = displayTitle;
+            
+            if (customBrandName) {
+                document.getElementById('customBrandName').value = customBrandName;
+            }
+
+            document.getElementById('modalTitle').textContent = langData.modalTitle;
+            document.getElementById('settingLangTitle').textContent = langData.langTitle;
+            document.getElementById('settingThemeTitle').textContent = langData.themeTitle;
+            document.getElementById('themeLightBtn').textContent = langData.lightTheme;
+            document.getElementById('themeDarkBtn').textContent = langData.darkTheme;
+            
+            document.getElementById('adminModalTitle').textContent = langData.adminTitle;
+            document.getElementById('optGerm').textContent = langData.optGerm;
+            document.getElementById('optSar').textContent = langData.optSar;
+            document.getElementById('optShirin').textContent = langData.optShirin;
+            document.getElementById('optVex').textContent = langData.optVex;
+            document.getElementById('optWejbe').textContent = langData.optWejbe;
+            document.getElementById('optEwaza').textContent = langData.optEwaza;
+            document.getElementById('adminListTitle').textContent = langData.adminListTitle;
+            document.getElementById('closeDetailBtnBottom').textContent = langData.closeBtn;
+            document.getElementById('adminCatToggleTitle').textContent = langData.adminCatToggleTitle;
+            
+            if (editingDishId) {
+                document.getElementById('saveDishBtn').textContent = langData.editBtn;
+            } else {
+                document.getElementById('saveDishBtn').textContent = langData.apply;
+            }
+            document.getElementById('cancelEditBtn').textContent = langData.cancelBtn;
+
+            document.getElementById('tabAll').textContent = langData.catAll;
+            document.getElementById('tabGerm').textContent = langData.catGerm;
+            document.getElementById('tabSar').textContent = langData.catSar;
+            document.getElementById('tabShirin').textContent = langData.catShirin;
+            document.getElementById('tabVex').textContent = langData.catVex;
+            document.getElementById('tabWejbe').textContent = langData.catWejbe;
+            document.getElementById('tabEwaza').textContent = langData.catEwaza;
+
+            document.querySelectorAll('[data-lang]').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-lang="${currentLang}"]`).classList.add('active');
+
+            // دروستکرنا داینامیکی یا لیستا شاردنەوەیا هەر ٦ کاتگۆریان
+            const catToggleGrid = document.getElementById('catToggleGrid');
+            catToggleGrid.innerHTML = `
+                <label class="cat-toggle-label" for="toggle_germ">
+                    <input type="checkbox" id="toggle_germ" ${categoriesState.germ ? 'checked' : ''} onchange="toggleCategoryState('germ', this.checked)"> ${langData.optGerm}
+                </label>
+                <label class="cat-toggle-label" for="toggle_sar">
+                    <input type="checkbox" id="toggle_sar" ${categoriesState.sar ? 'checked' : ''} onchange="toggleCategoryState('sar', this.checked)"> ${langData.optSar}
+                </label>
+                <label class="cat-toggle-label" for="toggle_shirin">
+                    <input type="checkbox" id="toggle_shirin" ${categoriesState.shirin ? 'checked' : ''} onchange="toggleCategoryState('shirin', this.checked)"> ${langData.optShirin}
+                </label>
+                <label class="cat-toggle-label" for="toggle_vexwarin">
+                    <input type="checkbox" id="toggle_vexwarin" ${categoriesState.vexwarin ? 'checked' : ''} onchange="toggleCategoryState('vexwarin', this.checked)"> ${langData.optVex}
+                </label>
+                <label class="cat-toggle-label" for="toggle_wejbe">
+                    <input type="checkbox" id="toggle_wejbe" ${categoriesState.wejbe ? 'checked' : ''} onchange="toggleCategoryState('wejbe', this.checked)"> ${langData.optWejbe}
+                </label>
+                <label class="cat-toggle-label" for="toggle_ewaza">
+                    <input type="checkbox" id="toggle_ewaza" ${categoriesState.ewaza ? 'checked' : ''} onchange="toggleCategoryState('ewaza', this.checked)"> ${langData.optEwaza}
+                </label>
+            `;
+
+            updateCategoryTabsVisibility();
+            renderDishes();
+            renderAdminList();
+        }
+
+        window.toggleCategoryState = function(categoryKey, isChecked) {
+            categoriesState[categoryKey] = isChecked;
+            localStorage.setItem('t_dade_categories', JSON.stringify(categoriesState));
+            
+            // سوارکردن و هەڵگرتنی بارودۆخی پشکان ل سەر فایەربەیسێ
+            if (isFirebaseActive) {
+                db.ref('settings/categoriesState').set(categoriesState).catch(err => {
+                    console.error("Error saving categories state to Firebase:", err);
+                });
+            }
+
+            updateCategoryTabsVisibility();
+            renderDishes();
+        };
+
+        const settingsModal = document.getElementById('settingsModal');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+
+        openSettingsBtn.addEventListener('click', () => settingsModal.classList.add('open'));
+        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('open'));
+
+        // ١٠ کلیک + پاسوۆردێ dade@2026 بۆ ئەدەمینێ
+        let devClicks = 0;
+        const devClickArea = document.getElementById('devClickArea');
+        const adminModal = document.getElementById('adminModal');
+        const closeAdminBtn = document.getElementById('closeAdminBtn');
+
+        devClickArea.addEventListener('click', () => {
+            devClicks++;
+            if (devClicks === 10) {
+                devClicks = 0;
+                settingsModal.classList.remove('open');
+                const pwd = prompt("پاسوۆردێ ئەدمینی لێبدە:");
+                if (pwd === ADMIN_PASSWORD) {
+                    adminModal.classList.add('open');
+                    renderAdminList();
+                } else {
+                    alert("پاسوۆرد شاشە!");
+                }
+            }
+        });
+
+        closeAdminBtn.addEventListener('click', () => {
+            resetAdminForm();
+            adminModal.classList.remove('open');
+        });
+
+        const saveBrandNameBtn = document.getElementById('saveBrandNameBtn');
+        saveBrandNameBtn.addEventListener('click', () => {
+            const customName = document.getElementById('customBrandName').value.trim();
+            if (customName) {
+                localStorage.setItem('t_dade_brand_name', customName);
+                document.getElementById('appBrandTitle').textContent = customName;
+                document.getElementById('footerBrandName').textContent = customName;
+                
+                // پاشکەوتکرنا ناڤێ نوو ل سەر فایەربەیسێ
+                if (isFirebaseActive) {
+                    db.ref('settings/brandName').set(customName).catch(err => {
+                        console.error("Error saving brand name to Firebase:", err);
+                    });
+                }
+                alert("ناڤێ مینیۆیێ ب سەرکەفتی هاتە گۆڕین!");
+            } else {
+                localStorage.removeItem('t_dade_brand_name');
+                if (isFirebaseActive) {
+                    db.ref('settings/brandName').remove();
+                }
+                applyLanguage();
+                alert("ناڤ ل سەر بنەڕەت هاتە نووکرن!");
+            }
+        });
+
+        // هەڵبژارتن و کرۆپکردنا ١:١ یا وێنەی ژ مۆبایلێ
+        const uploadImgBtn = document.getElementById('uploadImgBtn');
+        const newDishImgFile = document.getElementById('newDishImgFile');
+        const imgPreviewBox = document.getElementById('imgPreviewBox');
+        const imgPreview = document.getElementById('imgPreview');
+
+        uploadImgBtn.addEventListener('click', () => {
+            newDishImgFile.click();
+        });
+
+        newDishImgFile.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const size = 500; 
+                        canvas.width = size;
+                        canvas.height = size;
+                        const ctx = canvas.getContext('2d');
+                        
+                        const min = Math.min(img.width, img.height);
+                        const sx = (img.width - min) / 2;
+                        const sy = (img.height - min) / 2;
+                        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+                        
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+                        imgPreview.src = compressedBase64;
+                        imgPreviewBox.style.display = 'block';
+                        currentUploadedImgData = compressedBase64;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        window.deleteDish = function(id) {
+            if (confirm("تۆ پشتڕاستی دکەی بۆ ژێبرنا ڤێ خوارنێ؟")) {
+                dishes = dishes.filter(d => d.id !== id);
+                saveAndRefresh();
+                if (editingDishId === id) {
+                    resetAdminForm();
+                }
+            }
+        };
+
+        window.editDish = function(id) {
+            const dish = dishes.find(d => d.id === id);
+            if (!dish) return;
+
+            editingDishId = id;
+            document.getElementById('newDishName').value = dish.name;
+            document.getElementById('newDishPrice').value = dish.price;
+            document.getElementById('newDishDesc').value = dish.desc;
+            document.getElementById('newDishCat').value = dish.cat;
+            
+            currentUploadedImgData = dish.img || "";
+            if (dish.img) {
+                imgPreview.src = dish.img;
+                imgPreviewBox.style.display = 'block';
+            } else {
+                imgPreviewBox.style.display = 'none';
+            }
+
+            document.getElementById('saveDishBtn').textContent = translations[currentLang].editBtn;
+            document.getElementById('cancelEditBtn').style.display = 'block';
+        };
+
+        document.getElementById('cancelEditBtn').addEventListener('click', () => {
+            resetAdminForm();
+        });
+
+        function resetAdminForm() {
+            editingDishId = null;
+            document.getElementById('addDishForm').reset();
+            imgPreviewBox.style.display = 'none';
+            currentUploadedImgData = "";
+            newDishImgFile.value = "";
+            document.getElementById('saveDishBtn').textContent = translations[currentLang].apply;
+            document.getElementById('cancelEditBtn').style.display = 'none';
+        }
+
+        const saveDishBtn = document.getElementById('saveDishBtn');
+        saveDishBtn.addEventListener('click', () => {
+            const name = document.getElementById('newDishName').value.trim();
+            const price = document.getElementById('newDishPrice').value.trim();
+            const desc = document.getElementById('newDishDesc').value.trim();
+            const cat = document.getElementById('newDishCat').value;
+            const img = currentUploadedImgData; 
+
+            if (!name || !price || !desc) {
+                alert("بکەرەم، هیڤییە هەمی بەشێن سەرەکی تەمام بکە!");
+                return;
+            }
+
+            if (editingDishId) {
+                const index = dishes.findIndex(d => d.id === editingDishId);
+                if (index !== -1) {
+                    dishes[index] = { id: editingDishId, name, price, desc, cat, img };
+                }
+            } else {
+                const newDish = { id: Date.now(), name, price, desc, cat, img };
+                dishes.push(newDish);
+            }
+
+            saveAndRefresh();
+            resetAdminForm();
+        });
+
+        // پاشکەوتکرن و نووکرنا داتایان هەم د لۆکاڵ ستۆریج و هەم د فایەربەیسێ دا
+        function saveAndRefresh() {
+            localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
+            
+            if (isFirebaseActive) {
+                db.ref('dishes').set(dishes).catch(err => {
+                    console.error("Error saving dishes to Firebase:", err);
+                });
+            }
+            
+            renderDishes();
+            renderAdminList();
+        }
+
+        // سکرۆڵا داینامیکی و دەستبەجێ یا لودکردنا داتایان ژ فایەربەیسێ
+        function syncDataFromFirebase() {
+            if (isFirebaseActive) {
+                // ١. لودکردنا خوارنان دگەل لیسنەرەکێ ڕاستەوخۆ (Real-time listener)
+                db.ref('dishes').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.length > 0) {
+                        dishes = data;
+                        localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
+                        renderDishes();
+                        renderAdminList();
+                    } else {
+                        // ئەگەر فایەربەیس تەمام یێ بەتال بیت بۆ جارا یەکەم، داتایێن نموونە تێدا بنڤیسە
+                        db.ref('dishes').set(defaultDishes);
+                        db.ref('settings/categoriesState').set(defaultCategoriesState);
+                        db.ref('settings/brandName').set("تێشتا دادی");
+                    }
+                }, (err) => {
+                    console.error("Firebase sync error for dishes:", err);
+                });
+
+                // ٢. لودکردنا ڕێکخستنان (ناڤێ مینیۆ و تیک نیشانا پشکان)
+                db.ref('settings').on('value', (snapshot) => {
+                    const settings = snapshot.val();
+                    if (settings) {
+                        if (settings.brandName) {
+                            localStorage.setItem('t_dade_brand_name', settings.brandName);
+                        } else {
+                            localStorage.removeItem('t_dade_brand_name');
+                        }
+                        if (settings.categoriesState) {
+                            localStorage.setItem('t_dade_categories', JSON.stringify(settings.categoriesState));
+                            categoriesState = settings.categoriesState;
+                        }
+                        applyLanguage();
+                    }
+                }, (err) => {
+                    console.error("Firebase sync error for settings:", err);
+                });
+            }
+        }
+
+        const formGrid = document.getElementById('catToggleGrid');
+        formGrid.innerHTML = `
+            <label class="cat-toggle-label" for="toggle_germ"></label>
+            <label class="cat-toggle-label" for="toggle_sar"></label>
+            <label class="cat-toggle-label" for="toggle_shirin"></label>
+            <label class="cat-toggle-label" for="toggle_vexwarin"></label>
+            <label class="cat-toggle-label" for="toggle_wejbe"></label>
+            <label class="cat-toggle-label" for="toggle_ewaza"></label>
+        `;
+
+        applyTheme();
+        applyLanguage();
+        syncDataFromFirebase(); // دەستپێکرنا لیسنەرێ فایەربەیسێ
+    </script>
+
+</body>
+</html>
