@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ئەدمین پەنێل - تێشتا دادی</title>
     
-    <!-- هاوردەکرنا فۆنتێ Zain یێ گرۆڤر و فۆنتێ Cairo یێ بێ کێشە -->
     <link href="https://fonts.googleapis.com/css2?family=Zain:wght@700;800;900&family=Cairo:wght@700;900&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -232,20 +231,17 @@
         }
     </style>
 </head>
-<body class="dark-theme"> <!-- دیزاینێ ئەدمینی هەمیشە ل سەر مۆدا تاریک بیت -->
+<body class="dark-theme">
 
-    <!-- شاشەیا لێکدانا پاسوۆردی -->
     <div id="accessDenied">
         <h2 style="font-size: 1.5rem; color: var(--primary-color);">ڕێپێنەدراو | Access Denied</h2>
         <p style="color: var(--text-light);">هیڤییە پاسوۆردێ ئەدمینی لێبدە بۆ چوونەژوورێ</p>
         <button class="apply-btn" onclick="askPassword()" style="max-width: 200px;">چوونەژوورێ</button>
     </div>
 
-    <!-- ئەپلیکەیشن کۆنترۆڵ پەنێل -->
     <div class="admin-container" id="adminPanelMain" style="display: none;">
         <h2 class="header-title" id="adminModalTitle">ئەدمین پەنێل - تێشتا دادی</h2>
 
-        <!-- ناڤێ مینیۆیێ داینامیکی -->
         <div class="admin-cat-toggle-box">
             <div class="setting-group-title">ڕێکخستنا ناڤێ مینیۆیێ (سەر تاسکباری)</div>
             <div style="display: flex; gap: 8px;">
@@ -254,7 +250,6 @@
             </div>
         </div>
         
-        <!-- کۆنترۆڵا کاتگۆریان -->
         <div class="admin-cat-toggle-box">
             <div class="setting-group-title" id="adminCatToggleTitle">ڕێکخستنا پشکان (دیارکرن/شاردنەوە)</div>
             <div class="admin-cat-toggle-grid" id="catToggleGrid"></div>
@@ -292,11 +287,10 @@
     </div>
 
     <script>
-        // --- ⚙️ ڕێکخستنا فایەربەیسێ ---
         const firebaseConfig = {
             apiKey: "AIzaSyDfFAiTQjGGb5bnnN_GYxamix34Dpybsd0",
             authDomain: "dade-data.firebaseapp.com",
-            databaseURL: "https://dade-data-default-rtdb.europe-west1.firebasedatabase.app", // لینکێ فەرمی یێ ئەوروپا
+            databaseURL: "https://dade-data-default-rtdb.europe-west1.firebasedatabase.app", // لینکێ دروستکراوی ئەوروپا
             projectId: "dade-data",
             storageBucket: "dade-data.firebasestorage.app",
             messagingSenderId: "1044178637456",
