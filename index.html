@@ -549,7 +549,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDfFAiTQjGGb5bnnN_GYxamix34Dpybsd0",
             authDomain: "dade-data.firebaseapp.com",
-            databaseURL: "https://dade-data-default-rtdb.europe-west1.firebasedatabase.app", 
+            databaseURL: "https://dade-data-default-rtdb.europe-west1.firebasedatabase.app", // لینکێ دروستکراوی ئەوروپا
             projectId: "dade-data",
             storageBucket: "dade-data.firebasestorage.app",
             messagingSenderId: "1044178637456",
@@ -626,6 +626,11 @@
 
         let defaultCategoriesState = { germ: true, sar: true, shirin: true, vexwarin: true, wejbe: true, ewaza: true };
         let categoriesState = JSON.parse(localStorage.getItem('t_dade_categories')) || defaultCategoriesState;
+
+        // ڕێکخستنا ڕێزبەندیا فیزیکی یا ئۆپلۆدێ
+        function sortDishes() {
+            // داتایێن نوو ل دویڤ دەمێ زێدەکرنێ یان گۆڕینا فیزیکی د ئەرێیدا دمینن
+        }
 
         function renderDishes() {
             const menuGrid = document.getElementById('menuGrid');
@@ -769,7 +774,7 @@
             document.getElementById('footerBrandName').textContent = displayTitle;
 
             document.getElementById('modalTitle').textContent = langData.modalTitle;
-            document.getElementById('settingLangTitle').textContent = langData.title; // update placeholder if needed
+            document.getElementById('settingLangTitle').textContent = langData.langTitle;
             document.getElementById('settingThemeTitle').textContent = langData.themeTitle;
             document.getElementById('themeLightBtn').textContent = langData.lightTheme;
             document.getElementById('themeDarkBtn').textContent = langData.darkTheme;
