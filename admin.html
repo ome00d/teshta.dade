@@ -1,1 +1,573 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ئەدمین پەنێل - تێشتا دادی</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Zain:wght@700;800;900&family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
+    <style>
+        :root {
+            --primary-color: #9E121E; 
+            --accent-color: #DCAE5B; 
+            --bg-app: #FAF4F4; 
+            --card-bg: #ffffff;
+            --text-dark: #000000; 
+            --text-light: #2C3532; 
+            --border-accent: rgba(158, 18, 30, 0.12);
+            --tab-bg: #F5EAEB;
+            --app-font: 'Zain', 'Cairo', sans-serif;
+        }
+
+        .dark-theme {
+            --primary-color: #C1121C; 
+            --accent-color: #E6BC73; 
+            --bg-app: #0C110F; 
+            --card-bg: #151D1A;
+            --text-dark: #FFFFFF; 
+            --text-light: #D1DFD8;
+            --border-accent: rgba(193, 18, 28, 0.18);
+            --tab-bg: #222E2A;
+        }
+
+        body, button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6, div, label {
+            font-family: var(--app-font) !important;
+            letter-spacing: normal !important; 
+            font-variant-ligatures: common-ligatures !important; 
+            text-rendering: optimizeLegibility !important; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-dark);
+            padding: 20px 10px;
+        }
+
+        .admin-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-accent);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 15px 40px rgba(158, 18, 30, 0.15);
+        }
+
+        .header-title {
+            text-align: center;
+            font-size: 1.6rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-accent);
+            padding-bottom: 10px;
+        }
+
+        .admin-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .admin-form input, .admin-form select, .admin-form textarea {
+            width: 100%;
+            padding: 11px;
+            background-color: var(--tab-bg);
+            border: 1.5px solid var(--border-accent);
+            color: var(--text-dark) !important;
+            border-radius: 10px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .admin-form textarea {
+            resize: none;
+            height: 60px;
+        }
+
+        .apply-btn {
+            background-color: var(--primary-color);
+            color: #ffffff !important;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(158, 18, 30, 0.2);
+        }
+
+        .admin-cat-toggle-box {
+            background-color: var(--tab-bg);
+            border: 1.5px solid var(--border-accent);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .setting-group-title {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .admin-cat-toggle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .cat-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: var(--text-dark) !important;
+            cursor: pointer;
+        }
+
+        .cat-toggle-label input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .img-preview-box {
+            width: 100%;
+            aspect-ratio: 1/1 !important; 
+            border-radius: 10px;
+            overflow: hidden;
+            background: #eee;
+            margin-bottom: 6px;
+            border: 1.5px solid var(--border-accent);
+            display: none;
+        }
+
+        .img-preview-box img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        .admin-dishes-title {
+            font-size: 1.15rem;
+            color: var(--text-dark) !important;
+            margin: 18px 0 10px 0;
+            border-top: 2px dashed var(--border-accent);
+            padding-top: 14px;
+            font-weight: bold;
+        }
+
+        .admin-dishes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        .admin-dish-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--tab-bg);
+            border: 1.5px solid var(--border-accent);
+            border-radius: 10px;
+        }
+
+        .admin-dish-info {
+            font-size: 0.95rem;
+            color: var(--text-dark) !important;
+            max-width: 50%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-dish-actions {
+            display: flex;
+            gap: 4px; 
+        }
+
+        .admin-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.15rem; 
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-action-btn:hover {
+            background-color: rgba(45, 66, 57, 0.1);
+        }
+
+        #accessDenied {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            text-align: center;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body class="dark-theme"> <!-- دیزاینێ ئەدمینی ل سەر مۆدا تاریکە بەردەوام -->
+
+    <!-- شاشەیا لێکدانا پاسوۆردی -->
+    <div id="accessDenied">
+        <h2 style="font-size: 1.5rem; color: var(--primary-color);">ڕێپێنەدراو | Access Denied</h2>
+        <p style="color: var(--text-light);">هیڤییە پاسوۆردێ ئەدمینی لێبدە بۆ چوونەژوورێ</p>
+        <button class="apply-btn" onclick="askPassword()" style="max-width: 200px;">چوونەژوورێ</button>
+    </div>
+
+    <!-- ئەپلیکەیشن کۆنترۆڵ پەنێل -->
+    <div class="admin-container" id="adminPanelMain" style="display: none;">
+        <h2 class="header-title" id="adminModalTitle">ئەدمین پەنێل - تێشتا دادی</h2>
+
+        <!-- ناڤێ مینیۆیێ داینامیکی -->
+        <div class="admin-cat-toggle-box">
+            <div class="setting-group-title">ناڤێ مینیۆیێ (سەر تاسکباری)</div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="customBrandName" placeholder="ناڤەکێ نوو لێرە بنڤیسە...">
+                <button class="apply-btn" id="saveBrandNameBtn" style="width: auto; padding: 10px 16px; font-size: 0.85rem;">پاشکەوت</button>
+            </div>
+        </div>
+        
+        <!-- کۆنترۆڵا کاتگۆریان -->
+        <div class="admin-cat-toggle-box">
+            <div class="setting-group-title" id="adminCatToggleTitle">ڕێکخستنا پشکان (دیارکرن/شاردنەوە)</div>
+            <div class="admin-cat-toggle-grid" id="catToggleGrid"></div>
+        </div>
+
+        <form class="admin-form" id="addDishForm" onsubmit="event.preventDefault();">
+            <div class="img-preview-box" id="imgPreviewBox">
+                <img id="imgPreview" src="" alt="Preview">
+            </div>
+
+            <input type="text" id="newDishName" placeholder="ناڤێ خوارنێ بنڤیسە" required>
+            <input type="text" id="newDishPrice" placeholder="سعر ل دەڤ خۆ بدانە (نموونە: ٥,٠٠٠ د.ع)" required>
+            <textarea id="newDishDesc" placeholder="وەسفەکا کورت بنڤیسە" required></textarea>
+            
+            <select id="newDishCat" required>
+                <option value="germ" id="optGerm">گەرم</option>
+                <option value="sar" id="optSar">سار</option>
+                <option value="shirin" id="optShirin">شیریناهی</option>
+                <option value="vexwarin" id="optVex">ڤەخوارن</option>
+                <option value="wejbe" id="optWejbe">وجبە</option>
+                <option value="ewaza" id="optEwaza">عەوازە</option>
+            </select>
+
+            <input type="file" id="newDishImgFile" accept="image/*" style="display: none;">
+            <button class="apply-btn" type="button" id="uploadImgBtn" style="background-color: var(--tab-bg); color: var(--text-dark) !important; border: 1.5px solid var(--border-accent); margin-bottom: 10px;">هەڵبژارتنا وێنەی ژ مۆبایلێ 📸</button>
+
+            <div style="display: flex; gap: 8px;">
+                <button class="apply-btn" id="saveDishBtn">زێدەکرن</button>
+                <button class="apply-btn" id="cancelEditBtn" style="background-color: var(--text-light); display: none;">پاشگەزبوون</button>
+            </div>
+        </form>
+
+        <div class="admin-dishes-title" id="adminListTitle">لیستا خوارنان</div>
+        <div class="admin-dishes-list" id="adminDishesList"></div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfFAiTQjGGb5bnnN_GYxamix34Dpybsd0",
+            authDomain: "dade-data.firebaseapp.com",
+            databaseURL: "https://dade-data-default-rtdb.firebaseio.com", 
+            projectId: "dade-data",
+            storageBucket: "dade-data.firebasestorage.app",
+            messagingSenderId: "1044178637456",
+            appId: "1:1044178637456:web:5ba2bc75511dcabab5be15",
+            measurementId: "G-KQ2VVQL4N8"
+        };
+
+        let db = null;
+        let isFirebaseActive = false;
+
+        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                isFirebaseActive = true;
+            } catch (error) {
+                console.error("Firebase Initialization Failed:", error);
+            }
+        }
+
+        const ADMIN_PASSWORD = "dade@2026";
+        let dishes = [];
+        let categoriesState = { germ: true, sar: true, shirin: true, vexwarin: true, wejbe: true, ewaza: true };
+        let editingDishId = null;
+        let currentUploadedImgData = "";
+
+        // فۆنکشنا دڵنیاکردنەوەیا چوونە ژوورێ
+        function askPassword() {
+            const pwd = prompt("پاسوۆردێ ئەدمینی لێبدە:");
+            if (pwd === ADMIN_PASSWORD) {
+                document.getElementById('accessDenied').style.display = 'none';
+                document.getElementById('adminPanelMain').style.display = 'block';
+                syncDataFromFirebase();
+            } else {
+                alert("پاسوۆرد شاشە!");
+            }
+        }
+
+        window.moveToTop = function(id) {
+            const index = dishes.findIndex(d => d.id === id);
+            if (index > 0) {
+                const [item] = dishes.splice(index, 1);
+                dishes.unshift(item); 
+                saveAndRefresh();
+            }
+        };
+
+        window.moveUp = function(id) {
+            const index = dishes.findIndex(d => d.id === id);
+            if (index > 0) {
+                const temp = dishes[index];
+                dishes[index] = dishes[index - 1];
+                dishes[index - 1] = temp;
+                saveAndRefresh();
+            }
+        };
+
+        function renderAdminList() {
+            const adminDishesList = document.getElementById('adminDishesList');
+            adminDishesList.innerHTML = '';
+
+            dishes.forEach((dish, index) => {
+                const row = document.createElement('div');
+                row.className = 'admin-dish-row';
+                row.innerHTML = `
+                    <div class="admin-dish-info">
+                        <strong>${index + 1}. ${dish.name}</strong> (${dish.price})
+                    </div>
+                    <div class="admin-dish-actions">
+                        <button class="admin-action-btn" onclick="moveToTop(${dish.id})" title="Move to Top">🔝</button>
+                        <button class="admin-action-btn" onclick="moveUp(${dish.id})" title="Move Up">⬆️</button>
+                        <button class="admin-action-btn" onclick="editDish(${dish.id})" title="Edit">✏️</button>
+                        <button class="admin-action-btn" onclick="deleteDish(${dish.id})" title="Delete">🗑️</button>
+                    </div>
+                `;
+                adminDishesList.appendChild(row);
+            });
+        }
+
+        window.toggleCategoryState = function(categoryKey, isChecked) {
+            categoriesState[categoryKey] = isChecked;
+            localStorage.setItem('t_dade_categories', JSON.stringify(categoriesState));
+            if (isFirebaseActive) {
+                db.ref('settings/categoriesState').set(categoriesState);
+            }
+        };
+
+        const saveBrandNameBtn = document.getElementById('saveBrandNameBtn');
+        saveBrandNameBtn.addEventListener('click', () => {
+            const customName = document.getElementById('customBrandName').value.trim();
+            if (customName) {
+                localStorage.setItem('t_dade_brand_name', customName);
+                if (isFirebaseActive) {
+                    db.ref('settings/brandName').set(customName);
+                }
+                alert("ناڤ ب سەرکەفتی هاتە گۆڕین!");
+            } else {
+                localStorage.removeItem('t_dade_brand_name');
+                if (isFirebaseActive) {
+                    db.ref('settings/brandName').remove();
+                }
+                alert("ناڤ ل سەر بنەڕەت هاتە نووکرن!");
+            }
+        });
+
+        const uploadImgBtn = document.getElementById('uploadImgBtn');
+        const newDishImgFile = document.getElementById('newDishImgFile');
+        const imgPreviewBox = document.getElementById('imgPreviewBox');
+        const imgPreview = document.getElementById('imgPreview');
+
+        uploadImgBtn.addEventListener('click', () => {
+            newDishImgFile.click();
+        });
+
+        newDishImgFile.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const size = 500; 
+                        canvas.width = size;
+                        canvas.height = size;
+                        const ctx = canvas.getContext('2d');
+                        const min = Math.min(img.width, img.height);
+                        const sx = (img.width - min) / 2;
+                        const sy = (img.height - min) / 2;
+                        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+                        imgPreview.src = compressedBase64;
+                        imgPreviewBox.style.display = 'block';
+                        currentUploadedImgData = compressedBase64;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        window.deleteDish = function(id) {
+            if (confirm("تۆ پشتڕاستی دکەی بۆ ژێبرنا ڤێ خوارنێ؟")) {
+                dishes = dishes.filter(d => d.id !== id);
+                saveAndRefresh();
+                if (editingDishId === id) {
+                    resetAdminForm();
+                }
+            }
+        };
+
+        window.editDish = function(id) {
+            const dish = dishes.find(d => d.id === id);
+            if (!dish) return;
+
+            editingDishId = id;
+            document.getElementById('newDishName').value = dish.name;
+            document.getElementById('newDishPrice').value = dish.price;
+            document.getElementById('newDishDesc').value = dish.desc;
+            document.getElementById('newDishCat').value = dish.cat;
+            
+            currentUploadedImgData = dish.img || "";
+            if (dish.img) {
+                imgPreview.src = dish.img;
+                imgPreviewBox.style.display = 'block';
+            } else {
+                imgPreviewBox.style.display = 'none';
+            }
+
+            document.getElementById('saveDishBtn').textContent = "پاشکەوتکرن";
+            document.getElementById('cancelEditBtn').style.display = 'block';
+        };
+
+        document.getElementById('cancelEditBtn').addEventListener('click', () => {
+            resetAdminForm();
+        });
+
+        function resetAdminForm() {
+            editingDishId = null;
+            document.getElementById('addDishForm').reset();
+            imgPreviewBox.style.display = 'none';
+            currentUploadedImgData = "";
+            newDishImgFile.value = "";
+            document.getElementById('saveDishBtn').textContent = "زێدەکرن";
+            document.getElementById('cancelEditBtn').style.display = 'none';
+        }
+
+        const saveDishBtn = document.getElementById('saveDishBtn');
+        saveDishBtn.addEventListener('click', () => {
+            const name = document.getElementById('newDishName').value.trim();
+            const price = document.getElementById('newDishPrice').value.trim();
+            const desc = document.getElementById('newDishDesc').value.trim();
+            const cat = document.getElementById('newDishCat').value;
+            const img = currentUploadedImgData; 
+
+            if (!name || !price || !desc) {
+                alert("بکەرەم، هیڤییە هەمی بەشێن سەرەکی تەمام بکە!");
+                return;
+            }
+
+            if (editingDishId) {
+                const index = dishes.findIndex(d => d.id === editingDishId);
+                if (index !== -1) {
+                    dishes[index] = { id: editingDishId, name, price, desc, cat, img };
+                }
+            } else {
+                const newDish = { id: Date.now(), name, price, desc, cat, img };
+                dishes.push(newDish);
+            }
+
+            saveAndRefresh();
+            resetAdminForm();
+        });
+
+        function saveAndRefresh() {
+            localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
+            if (isFirebaseActive) {
+                db.ref('dishes').set(dishes);
+            }
+            renderAdminList();
+        }
+
+        function syncDataFromFirebase() {
+            if (isFirebaseActive) {
+                db.ref('dishes').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        dishes = data;
+                        renderAdminList();
+                    }
+                });
+
+                db.ref('settings').on('value', (snapshot) => {
+                    const settings = snapshot.val();
+                    if (settings) {
+                        if (settings.brandName) {
+                            document.getElementById('customBrandName').value = settings.brandName;
+                        }
+                        if (settings.categoriesState) {
+                            categoriesState = settings.categoriesState;
+                        }
+                        updateToggles();
+                    }
+                });
+            }
+        }
+
+        function updateToggles() {
+            const catToggleGrid = document.getElementById('catToggleGrid');
+            catToggleGrid.innerHTML = `
+                <label class="cat-toggle-label" for="toggle_germ">
+                    <input type="checkbox" id="toggle_germ" ${categoriesState.germ ? 'checked' : ''} onchange="toggleCategoryState('germ', this.checked)"> گەرم
+                </label>
+                <label class="cat-toggle-label" for="toggle_sar">
+                    <input type="checkbox" id="toggle_sar" ${categoriesState.sar ? 'checked' : ''} onchange="toggleCategoryState('sar', this.checked)"> سار
+                </label>
+                <label class="cat-toggle-label" for="toggle_shirin">
+                    <input type="checkbox" id="toggle_shirin" ${categoriesState.shirin ? 'checked' : ''} onchange="toggleCategoryState('shirin', this.checked)"> شیریناهی
+                </label>
+                <label class="cat-toggle-label" for="toggle_vexwarin">
+                    <input type="checkbox" id="toggle_vexwarin" ${categoriesState.vexwarin ? 'checked' : ''} onchange="toggleCategoryState('vexwarin', this.checked)"> ڤەخوارن
+                </label>
+                <label class="cat-toggle-label" for="toggle_wejbe">
+                    <input type="checkbox" id="toggle_wejbe" ${categoriesState.wejbe ? 'checked' : ''} onchange="toggleCategoryState('wejbe', this.checked)"> وجبە
+                </label>
+                <label class="cat-toggle-label" for="toggle_ewaza">
+                    <input type="checkbox" id="toggle_ewaza" ${categoriesState.ewaza ? 'checked' : ''} onchange="toggleCategoryState('ewaza', this.checked)"> عەوازە
+                </label>
+            `;
+        }
+
+        // ڕاستەوخۆ ل دەستپێکێ بپرسە بۆ پاسوۆردێ ئەدمینی
+        askPassword();
+    </script>
+</body>
+</html>
