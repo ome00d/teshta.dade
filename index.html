@@ -627,11 +627,6 @@
         let defaultCategoriesState = { germ: true, sar: true, shirin: true, vexwarin: true, wejbe: true, ewaza: true };
         let categoriesState = JSON.parse(localStorage.getItem('t_dade_categories')) || defaultCategoriesState;
 
-        // ڕێکخستنا ڕێزبەندیا فیزیکی یا ئۆپلۆدێ
-        function sortDishes() {
-            // داتایێن نوو ل دویڤ دەمێ زێدەکرنێ یان گۆڕینا فیزیکی د ئەرێیدا دمینن
-        }
-
         function renderDishes() {
             const menuGrid = document.getElementById('menuGrid');
             menuGrid.innerHTML = '';
@@ -803,39 +798,52 @@
         closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('open'));
 
         function syncDataFromFirebase() {
-            if (isFirebaseActive) {
-                db.ref('dishes').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.length > 0) {
-                        dishes = data;
-                        localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
-                        renderDishes();
-                    } else {
-                        db.ref('dishes').set(defaultDishes);
-                        db.ref('settings/categoriesState').set(defaultCategoriesState);
-                        db.ref('settings/brandName').set("تێشتا دادی");
-                    }
-                }, (err) => {
-                    console.error("Firebase sync error for dishes:", err);
-                });
-
-                db.ref('settings').on('value', (snapshot) => {
-                    const settings = snapshot.val();
-                    if (settings) {
-                        if (settings.brandName) {
-                            localStorage.setItem('t_dade_brand_name', settings.brandName);
+            if (isFirebaseActive && db) {
+                try {
+                    db.ref('dishes').on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            let parsedDishes = [];
+                            if (Array.isArray(data)) {
+                                parsedDishes = data.filter(item => item !== null);
+                            } else if (typeof data === 'object') {
+                                parsedDishes = Object.values(data).filter(item => item !== null);
+                            }
+                            
+                            if (parsedDishes.length > 0) {
+                                dishes = parsedDishes;
+                                localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
+                                renderDishes();
+                            } else {
+                                db.ref('dishes').set(defaultDishes).catch(e => console.error(e));
+                            }
                         } else {
-                            localStorage.removeItem('t_dade_brand_name');
+                            db.ref('dishes').set(defaultDishes).catch(e => console.error(e));
                         }
-                        if (settings.categoriesState) {
-                            localStorage.setItem('t_dade_categories', JSON.stringify(settings.categoriesState));
-                            categoriesState = settings.categoriesState;
+                    }, (err) => {
+                        console.error("Firebase sync error for dishes:", err);
+                    });
+
+                    db.ref('settings').on('value', (snapshot) => {
+                        const settings = snapshot.val();
+                        if (settings) {
+                            if (settings.brandName) {
+                                localStorage.setItem('t_dade_brand_name', settings.brandName);
+                            } else {
+                                localStorage.removeItem('t_dade_brand_name');
+                            }
+                            if (settings.categoriesState) {
+                                localStorage.setItem('t_dade_categories', JSON.stringify(settings.categoriesState));
+                                categoriesState = settings.categoriesState;
+                            }
+                            applyLanguage();
                         }
-                        applyLanguage();
-                    }
-                }, (err) => {
-                    console.error("Firebase sync error for settings:", err);
-                });
+                    }, (err) => {
+                        console.error("Firebase sync error for settings:", err);
+                    });
+                } catch(e) {
+                    console.error("Firebase sync listener crash caught:", e);
+                }
             }
         }
 
