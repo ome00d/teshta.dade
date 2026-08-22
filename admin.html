@@ -314,7 +314,6 @@
 
         const ADMIN_PASSWORD = "dade@2026";
         
-        // ١٥ خوارنێن بنەڕەتی یێن تەواو بۆ پڕکرنەوەی داتابەیسێ بۆ جارا یەکەم
         const defaultDishes = [
             { id: 1, name: "هێک ب سجووقێ", price: "٦,٢٥٠ د.ع", desc: "دوو هێکێن گوندێ دگەل سجووقا حەلال یا خۆمالی.", cat: "germ", img: "", order: 1 },
             { id: 2, name: "سینییا دادی یا مەزن", price: "١٥,٠٠٠ د.ع", desc: "هەمەجۆریا پەنێر، هنگڤین، قەیماخ و زەیتوونان.", cat: "sar", img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&h=400&fit=crop", order: 2 },
@@ -330,7 +329,7 @@
             { id: 12, name: "ئاڤا پرتەقالێ یا تازە", price: "٣,٥٠٠ د.ع", desc: "ئاڤا پرتەقالێ سروشتی یا سارد بێی شەکر.", cat: "vexwarin", img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400&h=400&fit=crop", order: 12 },
             { id: 13, name: "وجبا سپێدێ یا مۆدێرن", price: "٩,٠٠٠ د.ع", desc: "وجبەکا گەرم ژ هێلکە و قارچک و پۆستێن سەفەری.", cat: "wejbe", img: "", order: 13 },
             { id: 14, name: "زەیتوون ب بیبەرێ", price: "٢,٥٠٠ د.ع", desc: "زەیتوونێن کەسک و ڕەش دگەل زەیتا زەیتوونێ یا پاقژ.", cat: "sar", img: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400&h=400&fit=crop", order: 14 },
-            { id: 15, name: "قەهوا قەزوانا چیایی", price: "٢,٥٠٠ د.ع", desc: "قەهوا قەزوانا کوردی یا دەمکری ب شیری.", cat: "vexwarin", img: "", order: 15 }
+            { id: 15, name: "قەهوا قەزوانا چیایی", price: "٢,٥٠0 د.ع", desc: "قەهوا قەزوانا کوردی یا دەمکری ب شیری.", cat: "vexwarin", img: "", order: 15 }
         ];
 
         let dishes = JSON.parse(localStorage.getItem('t_dade_dishes')) || defaultDishes;
@@ -344,7 +343,6 @@
                 document.getElementById('accessDenied').style.display = 'none';
                 document.getElementById('adminPanelMain').style.display = 'block';
                 
-                // ڕێزبەندیکرن و نیشاندانا لۆکاڵ دەستبەجێ بۆ خێراکارکرنێ
                 renderAdminList();
                 updateToggles();
                 syncDataFromFirebase();
@@ -397,8 +395,14 @@
         window.toggleCategoryState = function(categoryKey, isChecked) {
             categoriesState[categoryKey] = isChecked;
             localStorage.setItem('t_dade_categories', JSON.stringify(categoriesState));
-            if (isFirebaseActive) {
-                db.ref('settings/categoriesState').set(categoriesState);
+            if (isFirebaseActive && db) {
+                try {
+                    db.ref('settings/categoriesState').set(categoriesState).catch(err => {
+                        console.error("Firebase Toggle Error:", err);
+                    });
+                } catch(e) {
+                    console.error("Toggle crash caught:", e);
+                }
             }
         };
 
@@ -407,14 +411,26 @@
             const customName = document.getElementById('customBrandName').value.trim();
             if (customName) {
                 localStorage.setItem('t_dade_brand_name', customName);
-                if (isFirebaseActive) {
-                    db.ref('settings/brandName').set(customName);
+                if (isFirebaseActive && db) {
+                    try {
+                        db.ref('settings/brandName').set(customName).catch(err => {
+                            console.error("Firebase Brand Error:", err);
+                        });
+                    } catch(e) {
+                        console.error("Brand save crash caught:", e);
+                    }
                 }
                 alert("ناڤ ب سەرکەفتی هاتە گۆڕین!");
             } else {
                 localStorage.removeItem('t_dade_brand_name');
-                if (isFirebaseActive) {
-                    db.ref('settings/brandName').remove();
+                if (isFirebaseActive && db) {
+                    try {
+                        db.ref('settings/brandName').remove().catch(err => {
+                            console.error("Firebase Brand Remove Error:", err);
+                        });
+                    } catch(e) {
+                        console.error("Brand remove crash caught:", e);
+                    }
                 }
                 alert("ناڤ ل سەر بنەڕەت هاتە نووکرن!");
             }
@@ -529,50 +545,66 @@
             resetAdminForm();
         });
 
+        // سیستەمێ پاراستنا لۆکال ژ باگ و تەقینێن فایەربەیسێ (Fail-safe Try-Catch)
         function saveAndRefresh() {
             localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
-            if (isFirebaseActive) {
-                db.ref('dishes').set(dishes);
+            
+            if (isFirebaseActive && db) {
+                try {
+                    db.ref('dishes').set(dishes).catch(err => {
+                        console.error("Firebase Write Promise Error:", err);
+                        alert("فایەربەیس ڕێگریێ دکەت (تیک نیشانا Publish د بن ل سەر فایەربەیسێ بکە): " + err.message);
+                    });
+                } catch(e) {
+                    console.error("Firebase Sync Crash Caught:", e);
+                }
             }
             renderAdminList();
         }
 
         function syncDataFromFirebase() {
-            if (isFirebaseActive) {
-                db.ref('dishes').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        let parsedDishes = [];
-                        if (Array.isArray(data)) {
-                            parsedDishes = data.filter(item => item !== null);
-                        } else if (typeof data === 'object') {
-                            parsedDishes = Object.values(data).filter(item => item !== null);
-                        }
-                        
-                        if (parsedDishes.length > 0) {
-                            dishes = parsedDishes;
-                            renderAdminList();
+            if (isFirebaseActive && db) {
+                try {
+                    db.ref('dishes').on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            let parsedDishes = [];
+                            if (Array.isArray(data)) {
+                                parsedDishes = data.filter(item => item !== null);
+                            } else if (typeof data === 'object') {
+                                parsedDishes = Object.values(data).filter(item => item !== null);
+                            }
+                            
+                            if (parsedDishes.length > 0) {
+                                dishes = parsedDishes;
+                                renderAdminList();
+                            } else {
+                                db.ref('dishes').set(defaultDishes).catch(e => console.error(e));
+                            }
                         } else {
-                            // ئەگەر تەمام بەتاڵ بیت داتایێن دەستپێک ل سەر فایەربەیسێ بنڤیسە
-                            db.ref('dishes').set(defaultDishes);
+                            db.ref('dishes').set(defaultDishes).catch(e => console.error(e));
                         }
-                    } else {
-                        db.ref('dishes').set(defaultDishes);
-                    }
-                });
+                    }, (err) => {
+                        console.error("Firebase Listen Error:", err);
+                    });
 
-                db.ref('settings').on('value', (snapshot) => {
-                    const settings = snapshot.val();
-                    if (settings) {
-                        if (settings.brandName) {
-                            document.getElementById('customBrandName').value = settings.brandName;
+                    db.ref('settings').on('value', (snapshot) => {
+                        const settings = snapshot.val();
+                        if (settings) {
+                            if (settings.brandName) {
+                                document.getElementById('customBrandName').value = settings.brandName;
+                            }
+                            if (settings.categoriesState) {
+                                categoriesState = settings.categoriesState;
+                            }
+                            updateToggles();
                         }
-                        if (settings.categoriesState) {
-                            categoriesState = settings.categoriesState;
-                        }
-                        updateToggles();
-                    }
-                });
+                    }, (err) => {
+                        console.error("Firebase Settings Listen Error:", err);
+                    });
+                } catch(e) {
+                    console.error("Firebase sync listener crash caught:", e);
+                }
             }
         }
 
