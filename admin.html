@@ -237,7 +237,7 @@
     <div id="accessDenied">
         <h2 style="font-size: 1.5rem; color: var(--primary-color);">ڕێپێنەدراو | Access Denied</h2>
         <p style="color: var(--text-light);">هیڤییە پاسوۆردێ ئەدمینی لێبدە بۆ چوونەژوورێ</p>
-        <button class="apply-btn" onclick="askPassword()" style="max-width: 200px;">چوونەژوورێ</button>
+        <button class="apply-btn" type="button" onclick="askPassword()" style="max-width: 200px;">چوونەژوورێ</button>
     </div>
 
     <div class="admin-container" id="adminPanelMain" style="display: none;">
@@ -247,7 +247,7 @@
             <div class="setting-group-title">ڕێکخستنا ناڤێ مینیۆیێ (سەر تاسکباری)</div>
             <div style="display: flex; gap: 8px;">
                 <input type="text" id="customBrandName" placeholder="ناڤەکێ نوو لێرە بنڤیسە...">
-                <button class="apply-btn" id="saveBrandNameBtn" style="width: auto; padding: 10px 16px; font-size: 0.85rem;">پاشکەوت</button>
+                <button class="apply-btn" type="button" id="saveBrandNameBtn" style="width: auto; padding: 10px 16px; font-size: 0.85rem;">پاشکەوت</button>
             </div>
         </div>
         
@@ -278,8 +278,9 @@
             <button class="apply-btn" type="button" id="uploadImgBtn" style="background-color: var(--tab-bg); color: var(--text-dark) !important; border: 1.5px solid var(--border-accent); margin-bottom: 10px;">هەڵبژارتنا وێنەی ژ مۆبایلێ 📸</button>
 
             <div style="display: flex; gap: 8px;">
-                <button class="apply-btn" id="saveDishBtn">زێدەکرن</button>
-                <button class="apply-btn" id="cancelEditBtn" style="background-color: var(--text-light); display: none;">پاشگەزبوون</button>
+                <!-- گۆڕینا جۆرێ دوگمەی بۆ button دا کو لاپەڕە دووبارە لود نەبیت -->
+                <button class="apply-btn" type="button" id="saveDishBtn">زێدەکرن</button>
+                <button class="apply-btn" type="button" id="cancelEditBtn" style="background-color: var(--text-light); display: none;">پاشگەزبوون</button>
             </div>
         </form>
 
@@ -291,7 +292,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDfFAiTQjGGb5bnnN_GYxamix34Dpybsd0",
             authDomain: "dade-data.firebaseapp.com",
-            databaseURL: "https://dade-data-default-rtdb.europe-west1.firebasedatabase.app", // لینکێ دروستکراوی ئەوروپا
+            databaseURL: "https://dade-data-default-rtdb.europe-west1.firebasedatabase.app", 
             projectId: "dade-data",
             storageBucket: "dade-data.firebasestorage.app",
             messagingSenderId: "1044178637456",
@@ -329,7 +330,7 @@
             { id: 12, name: "ئاڤا پرتەقالێ یا تازە", price: "٣,٥٠٠ د.ع", desc: "ئاڤا پرتەقالێ سروشتی یا سارد بێی شەکر.", cat: "vexwarin", img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400&h=400&fit=crop", order: 12 },
             { id: 13, name: "وجبا سپێدێ یا مۆدێرن", price: "٩,٠٠٠ د.ع", desc: "وجبەکا گەرم ژ هێلکە و قارچک و پۆستێن سەفەری.", cat: "wejbe", img: "", order: 13 },
             { id: 14, name: "زەیتوون ب بیبەرێ", price: "٢,٥٠٠ د.ع", desc: "زەیتوونێن کەسک و ڕەش دگەل زەیتا زەیتوونێ یا پاقژ.", cat: "sar", img: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400&h=400&fit=crop", order: 14 },
-            { id: 15, name: "قەهوا قەزوانا چیایی", price: "٢,٥٠0 د.ع", desc: "قەهوا قەزوانا کوردی یا دەمکری ب شیری.", cat: "vexwarin", img: "", order: 15 }
+            { id: 15, name: "قەهوا قەزوانا چیایی", price: "٢,٥٠٠ د.ع", desc: "قەهوا قەزوانا کوردی یا دەمکری ب شیری.", cat: "vexwarin", img: "", order: 15 }
         ];
 
         let dishes = JSON.parse(localStorage.getItem('t_dade_dishes')) || defaultDishes;
@@ -382,10 +383,10 @@
                         <strong>${index + 1}. ${dish.name}</strong> (${dish.price})
                     </div>
                     <div class="admin-dish-actions">
-                        <button class="admin-action-btn" onclick="moveToTop(${dish.id})" title="Move to Top">🔝</button>
-                        <button class="admin-action-btn" onclick="moveUp(${dish.id})" title="Move Up">⬆️</button>
-                        <button class="admin-action-btn" onclick="editDish(${dish.id})" title="Edit">✏️</button>
-                        <button class="admin-action-btn" onclick="deleteDish(${dish.id})" title="Delete">🗑️</button>
+                        <button class="admin-action-btn" type="button" onclick="moveToTop(${dish.id})" title="Move to Top">🔝</button>
+                        <button class="admin-action-btn" type="button" onclick="moveUp(${dish.id})" title="Move Up">⬆️</button>
+                        <button class="admin-action-btn" type="button" onclick="editDish(${dish.id})" title="Edit">✏️</button>
+                        <button class="admin-action-btn" type="button" onclick="deleteDish(${dish.id})" title="Delete">🗑️</button>
                     </div>
                 `;
                 adminDishesList.appendChild(row);
@@ -545,15 +546,17 @@
             resetAdminForm();
         });
 
-        // سیستەمێ پاراستنا لۆکال ژ باگ و تەقینێن فایەربەیسێ (Fail-safe Try-Catch)
+        // مۆبایل فریێندلی تاقیکردنەوەیا لایڤ و خەزنکرنا سەرکەفتی
         function saveAndRefresh() {
             localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
             
             if (isFirebaseActive && db) {
                 try {
-                    db.ref('dishes').set(dishes).catch(err => {
-                        console.error("Firebase Write Promise Error:", err);
-                        alert("فایەربەیس ڕێگریێ دکەت (تیک نیشانا Publish د بن ل سەر فایەربەیسێ بکە): " + err.message);
+                    db.ref('dishes').set(dishes).then(() => {
+                        console.log("Data synced to Firebase successfully.");
+                    }).catch(err => {
+                        console.error("Firebase write rejected:", err);
+                        alert("ئەرور د فایەربەیسێ دا (یاساکان پاشکەوت نەکردوونەتەوە): " + err.message);
                     });
                 } catch(e) {
                     console.error("Firebase Sync Crash Caught:", e);
@@ -565,6 +568,15 @@
         function syncDataFromFirebase() {
             if (isFirebaseActive && db) {
                 try {
+                    // تاقیکردنەوەیا ڕاستەوخۆ یا گرێدانا داتابەیسێ ل سەر مۆبایلێ
+                    db.ref('.info/connected').on('value', (snap) => {
+                        if (snap.val() === true) {
+                            console.log("Connected to Firebase Realtime Database!");
+                        } else {
+                            console.log("Disconnected from Firebase.");
+                        }
+                    });
+
                     db.ref('dishes').on('value', (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
@@ -585,7 +597,7 @@
                             db.ref('dishes').set(defaultDishes).catch(e => console.error(e));
                         }
                     }, (err) => {
-                        console.error("Firebase Listen Error:", err);
+                        console.error("Firebase dishes listen error:", err);
                     });
 
                     db.ref('settings').on('value', (snapshot) => {
@@ -600,10 +612,10 @@
                             updateToggles();
                         }
                     }, (err) => {
-                        console.error("Firebase Settings Listen Error:", err);
+                        console.error("Firebase settings listen error:", err);
                     });
                 } catch(e) {
-                    console.error("Firebase sync listener crash caught:", e);
+                    console.error("Firebase initialization sync crash caught:", e);
                 }
             }
         }
