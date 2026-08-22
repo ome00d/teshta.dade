@@ -209,7 +209,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 1.25rem; 
+            font-size: 1.15rem; 
             padding: 4px;
             border-radius: 6px;
             display: flex;
@@ -262,7 +262,7 @@
             </div>
 
             <input type="text" id="newDishName" placeholder="ناڤێ خوارنێ بنڤیسە" required>
-            <input type="text" id="newDishPrice" placeholder="سعر ل دەڤ خۆ بدانە (نموونە: ٥,٠٠0 د.ع)" required>
+            <input type="text" id="newDishPrice" placeholder="سعر ل دەڤ خۆ بدانە (نموونە: ٥,٠٠٠ د.ع)" required>
             <textarea id="newDishDesc" placeholder="وەسفەکا کورت بنڤیسە" required></textarea>
             
             <select id="newDishCat" required>
@@ -288,11 +288,10 @@
     </div>
 
     <script>
-        // --- ⚙️ ڕێکخستنا فایەربەیسێ ---
         const firebaseConfig = {
             apiKey: "AIzaSyDfFAiTQjGGb5bnnN_GYxamix34Dpybsd0",
             authDomain: "dade-data.firebaseapp.com",
-            databaseURL: "https://dade-data-default-rtdb.firebaseio.com", // لینکێ فەرمی یێ ئەمریکا کو دروستە
+            databaseURL: "https://dade-data-default-rtdb.firebaseio.com", 
             projectId: "dade-data",
             storageBucket: "dade-data.firebasestorage.app",
             messagingSenderId: "1044178637456",
@@ -454,7 +453,7 @@
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        const size = 500; 
+                        const size = 400; // قەبارەی مۆدێرن و گەلەک سڤک (٤٠٠ ب ٤٠٠)
                         canvas.width = size;
                         canvas.height = size;
                         const ctx = canvas.getContext('2d');
@@ -462,7 +461,9 @@
                         const sx = (img.width - min) / 2;
                         const sy = (img.height - min) / 2;
                         ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
-                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+                        
+                        // کەمکردنەوەی کوالێتی وێمەی بۆ ٧٠٪ بۆ پاراستنی مێمۆری مۆبایلێ
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
                         imgPreview.src = compressedBase64;
                         imgPreviewBox.style.display = 'block';
                         currentUploadedImgData = compressedBase64;
@@ -546,17 +547,21 @@
             resetAdminForm();
         });
 
-        // سیستەمێ پاراستنا لۆکال ژ باگ و تەقینێن فایەربەیسێ (Fail-safe Try-Catch)
+        // سیستەمێ پاراستنا مۆبایلێ ژ تژیبوونا لۆکاڵ ستۆریج (Try-Catch)
         function saveAndRefresh() {
-            localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
+            try {
+                localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
+            } catch (e) {
+                console.warn("LocalStorage is full, syncing directly to Firebase...", e);
+            }
             
             if (isFirebaseActive && db) {
                 try {
                     db.ref('dishes').set(dishes).then(() => {
                         console.log("Data synced to Firebase successfully.");
                     }).catch(err => {
-                        console.error("Firebase Write Promise Error:", err);
-                        alert("فایەربەیس ڕێگریێ دکەت (تیک نیشانا Publish د بن ل سەر فایەربەیسێ بکە): " + err.message);
+                        console.error("Firebase write rejected:", err);
+                        alert("ئەرور د فایەربەیسێ دا (یاساکان پاشکەوت نەکردوونەتەوە): " + err.message);
                     });
                 } catch(e) {
                     console.error("Firebase Sync Crash Caught:", e);
@@ -568,7 +573,6 @@
         function syncDataFromFirebase() {
             if (isFirebaseActive && db) {
                 try {
-                    // تاقیکردنەوەیا ڕاستەوخۆ یا گرێدانا داتابەیسێ ل سەر مۆبایلێ
                     db.ref('.info/connected').on('value', (snap) => {
                         if (snap.val() === true) {
                             console.log("Connected to Firebase Realtime Database!");
