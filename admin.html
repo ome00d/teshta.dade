@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ئەدمین پەنێل - تێشتا دادی</title>
     
+    <!-- هاوردەکرنا فۆنتێ Zain یێ گرۆڤر و فۆنتێ Cairo یێ بێ کێشە -->
     <link href="https://fonts.googleapis.com/css2?family=Zain:wght@700;800;900&family=Cairo:wght@700;900&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -312,7 +313,27 @@
         }
 
         const ADMIN_PASSWORD = "dade@2026";
-        let dishes = [];
+        
+        // ١٥ خوارنێن بنەڕەتی یێن تەواو بۆ پڕکرنەوەی داتابەیسێ بۆ جارا یەکەم
+        const defaultDishes = [
+            { id: 1, name: "هێک ب سجووقێ", price: "٦,٢٥٠ د.ع", desc: "دوو هێکێن گوندێ دگەل سجووقا حەلال یا خۆمالی.", cat: "germ", img: "", order: 1 },
+            { id: 2, name: "سینییا دادی یا مەزن", price: "١٥,٠٠٠ د.ع", desc: "هەمەجۆریا پەنێر، هنگڤین، قەیماخ و زەیتوونان.", cat: "sar", img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&h=400&fit=crop", order: 2 },
+            { id: 3, name: "مەنەمەنا دادی", price: "٥,٠٠٠ د.ع", desc: "تەماتە، بیبەر و هێکێن تێکەل ب پەنیری ڤە.", cat: "germ", img: "", order: 3 },
+            { id: 4, name: "قەیماخ و هنگڤین", price: "٦,٠٠٠ د.ع", desc: "قەیماخێ سرۆشتی دگەل هنگڤینێ چیا یێ پاقژ.", cat: "shirin", img: "https://images.unsplash.com/photo-1584736286279-4172579b29cc?w=400&h=400&fit=crop", order: 4 },
+            { id: 5, name: "کولێرا تنوورێ", price: "١,٥٠٠ د.ع", desc: "کولێرا تەڕ و گەرم ب کەرە و کونجی ڤە.", cat: "germ", img: "", order: 5 },
+            { id: 6, name: "چایا ب هێلێ", price: "١,٠٠٠ د.ع", desc: "چایا ڕەش یا دەمکری ل سەر پشکۆیێ گەرم.", cat: "vexwarin", img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&h=400&fit=crop", order: 6 },
+            { id: 7, name: "وجبا دادی یا تایبەت", price: "١٢,٥٠٠ د.ع", desc: "وجبەکا تەمام پێکهاتی ژ هێک، سجووق، پەنێر، هنگڤین و چایا دەمکری.", cat: "wejbe", img: "", order: 7 },
+            { id: 8, name: "عەوازە هنگڤین و کەرێ", price: "٣,٥٠٠ د.ع", desc: "کەرەیا کێوی دگەل هنگڤینێ چیایی یێ دەڤەرێ بۆ زێدەکرنێ.", cat: "ewaza", img: "", order: 8 },
+            { id: 9, name: "هێک ب قەلیا گۆشتی", price: "٧,٥٠٠ د.ع", desc: "قەلیا گۆشتێ بەرخی یێ کوردی دگەل هێکان.", cat: "germ", img: "https://images.unsplash.com/photo-1608897013039-887f21d8c804?w=400&h=400&fit=crop", order: 9 },
+            { id: 10, name: "پەنێر ب گواێز", price: "٤,٥٠٠ د.ع", desc: "پەنێرێ سپی یێ چێکری دگەل مغزێ گویزێن تەڕ.", cat: "sar", img: "https://images.unsplash.com/photo-1552763443-1589487d27e5?w=400&h=400&fit=crop", order: 10 },
+            { id: 11, name: "کەرە و دۆشاب یا مالێ", price: "٤,٠٠٠ د.ع", desc: "کەرەیا کێوی دگەل دۆشابا تری یا ب تام دگەل گونییا ڕەسەن.", cat: "shirin", img: "", order: 11 },
+            { id: 12, name: "ئاڤا پرتەقالێ یا تازە", price: "٣,٥٠٠ د.ع", desc: "ئاڤا پرتەقالێ سروشتی یا سارد بێی شەکر.", cat: "vexwarin", img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400&h=400&fit=crop", order: 12 },
+            { id: 13, name: "وجبا سپێدێ یا مۆدێرن", price: "٩,٠٠٠ د.ع", desc: "وجبەکا گەرم ژ هێلکە و قارچک و پۆستێن سەفەری.", cat: "wejbe", img: "", order: 13 },
+            { id: 14, name: "زەیتوون ب بیبەرێ", price: "٢,٥٠٠ د.ع", desc: "زەیتوونێن کەسک و ڕەش دگەل زەیتا زەیتوونێ یا پاقژ.", cat: "sar", img: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400&h=400&fit=crop", order: 14 },
+            { id: 15, name: "قەهوا قەزوانا چیایی", price: "٢,٥٠٠ د.ع", desc: "قەهوا قەزوانا کوردی یا دەمکری ب شیری.", cat: "vexwarin", img: "", order: 15 }
+        ];
+
+        let dishes = JSON.parse(localStorage.getItem('t_dade_dishes')) || defaultDishes;
         let categoriesState = { germ: true, sar: true, shirin: true, vexwarin: true, wejbe: true, ewaza: true };
         let editingDishId = null;
         let currentUploadedImgData = "";
@@ -322,6 +343,10 @@
             if (pwd === ADMIN_PASSWORD) {
                 document.getElementById('accessDenied').style.display = 'none';
                 document.getElementById('adminPanelMain').style.display = 'block';
+                
+                // ڕێزبەندیکرن و نیشاندانا لۆکاڵ دەستبەجێ بۆ خێراکارکرنێ
+                renderAdminList();
+                updateToggles();
                 syncDataFromFirebase();
             } else {
                 alert("پاسوۆرد شاشە!");
@@ -517,8 +542,22 @@
                 db.ref('dishes').on('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
-                        dishes = data;
-                        renderAdminList();
+                        let parsedDishes = [];
+                        if (Array.isArray(data)) {
+                            parsedDishes = data.filter(item => item !== null);
+                        } else if (typeof data === 'object') {
+                            parsedDishes = Object.values(data).filter(item => item !== null);
+                        }
+                        
+                        if (parsedDishes.length > 0) {
+                            dishes = parsedDishes;
+                            renderAdminList();
+                        } else {
+                            // ئەگەر تەمام بەتاڵ بیت داتایێن دەستپێک ل سەر فایەربەیسێ بنڤیسە
+                            db.ref('dishes').set(defaultDishes);
+                        }
+                    } else {
+                        db.ref('dishes').set(defaultDishes);
                     }
                 });
 
