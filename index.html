@@ -549,7 +549,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDfFAiTQjGGb5bnnN_GYxamix34Dpybsd0",
             authDomain: "dade-data.firebaseapp.com",
-            databaseURL: "https://dade-data-default-rtdb.europe-west1.firebasedatabase.app", // لینکێ دروستکراوی ئەوروپا
+            databaseURL: "https://dade-data-default-rtdb.firebaseio.com", // گۆڕینەوە بۆ یێ فەرمی یێ ئەمریکا کو دروستە
             projectId: "dade-data",
             storageBucket: "dade-data.firebasestorage.app",
             messagingSenderId: "1044178637456",
@@ -802,21 +802,20 @@
                 try {
                     db.ref('dishes').on('value', (snapshot) => {
                         const data = snapshot.val();
+                        let parsedDishes = [];
+                        
                         if (data) {
-                            let parsedDishes = [];
                             if (Array.isArray(data)) {
                                 parsedDishes = data.filter(item => item !== null);
                             } else if (typeof data === 'object') {
                                 parsedDishes = Object.values(data).filter(item => item !== null);
                             }
-                            
-                            if (parsedDishes.length > 0) {
-                                dishes = parsedDishes;
-                                localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
-                                renderDishes();
-                            } else {
-                                db.ref('dishes').set(defaultDishes).catch(e => console.error(e));
-                            }
+                        }
+
+                        if (parsedDishes.length > 0) {
+                            dishes = parsedDishes;
+                            localStorage.setItem('t_dade_dishes', JSON.stringify(dishes));
+                            renderDishes();
                         } else {
                             db.ref('dishes').set(defaultDishes).catch(e => console.error(e));
                         }
